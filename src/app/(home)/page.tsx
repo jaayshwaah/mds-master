@@ -1,4 +1,3 @@
-// src/app/(home)/page.tsx
 'use client';
 
 import { useSupabase } from '@/components/AuthProvider';
