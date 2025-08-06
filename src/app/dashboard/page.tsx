@@ -1,30 +1,44 @@
-// src/app/dashboard/page.tsx
 'use client';
 
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useSupabase } from '@/components/AuthProvider';
-import { useEffect } from 'react';
 
 export default function DashboardPage() {
-  const { session, signOut } = useSupabase();
+  const supabase = useSupabase();
+  const router = useRouter();
+
+  const [profile, setProfile] = useState<{ nursing_home_name?: string } | null>(null);
 
   useEffect(() => {
-    if (!session) {
-      // Redirect to login if no session
-      window.location.href = '/login';
-    }
-  }, [session]);
+    const fetchProfile = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
 
-  if (!session) return null;
+      if (!session) {
+        router.push('/login');
+        return;
+      }
+
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('nursing_home_name')
+        .eq('id', session.user.id)
+        .single();
+
+      setProfile(profileData);
+    };
+
+    fetchProfile();
+  }, [supabase, router]);
 
   return (
-    <div className="flex items-center justify-center h-screen bg-gray-100">
-      <div className="p-8 bg-white rounded-lg shadow-md">
-        <h2 className="mb-4 text-2xl font-bold">Dashboard</h2>
-        <p>Welcome, {session.user.email}</p>
-        <button onClick={signOut} className="mt-4 p-2 bg-red-600 text-white rounded">
-          Logout
-        </button>
-      </div>
-    </div>
+    <main className="p-4">
+      <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
+      {profile ? (
+        <p className="text-gray-600">Nursing Home: {profile.nursing_home_name}</p>
+      ) : (
+        <p>Loading profile...</p>
+      )}
+    </main>
   );
 }
