@@ -1,4 +1,3 @@
-// src/lib/supabase/middleware.ts
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
@@ -15,8 +14,8 @@ export async function updateSession(request: NextRequest) {
         set: (name, value, options) => {
           supabaseResponse.cookies.set(name, value, options);
         },
-        remove: (name, options) => {
-          supabaseResponse.cookies.delete(name, options);
+        remove: (name) => {
+          supabaseResponse.cookies.delete(name); // ✅ FIXED: remove options param
         },
       },
     }
