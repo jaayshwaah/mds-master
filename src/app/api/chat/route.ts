@@ -1,44 +1,54 @@
+// src/app/api/chat/route.ts
+import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { NextResponse } from 'next/server';
+import OpenAI from 'openai';
+import type { Database } from '@/types/supabase';
 
-export async function POST(request: Request) {
-  try {
-    // Await cookies() to handle async dynamic API
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll: () => cookieStore.getAll(),
-          setAll: (cookiesToSet) => {
-            cookiesToSet.forEach(({ name, value, options }) => cookieStore.set({ name, value, ...options }));
-          },
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+export async function POST(req: NextRequest) {
+  const cookieStore = cookies();
+
+  const supabase = createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
         },
-      }
-    );
-
-    // Verify session
-    const { data: { session }, error } = await supabase.auth.getSession();
-    if (error || !session) {
-      console.error('Session error:', error?.message || 'No session found');
-      console.error('Cookies:', cookieStore.getAll());
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      },
     }
+  );
 
-    // Get message
-    const { message } = await request.json();
-    if (!message) {
-      return NextResponse.json({ error: 'Message required' }, { status: 400 });
-    }
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-    // Placeholder response (replace with n8n later)
-    return NextResponse.json({
-      response: `Received: "${message}". This is a placeholder response from MDS Master. n8n integration pending.`,
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { message } = await req.json();
+
+  if (!message) {
+    return NextResponse.json({ error: 'Message is required' }, { status: 400 });
+  }
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [{ role: 'user', content: message }],
     });
+
+    const reply = completion.choices[0]?.message?.content ?? 'No reply';
+
+    return NextResponse.json({ reply });
   } catch (error) {
-    console.error('Route error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Chat error:', error);
+    return NextResponse.json({ error: 'Error generating response' }, { status: 500 });
   }
 }

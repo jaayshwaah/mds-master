@@ -1,71 +1,83 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useSupabase } from '@/components/AuthProvider';
+import { useEffect, useRef, useState } from 'react';
+
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+}
 
 export default function ChatPage() {
-  const supabase = useSupabase();
-  const router = useRouter();
-
-  const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const [profile, setProfile] = useState<{ nursing_home_name?: string } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
-      if (!session) {
-        router.push('/login');
-        return;
-      }
+  useEffect(scrollToBottom, [messages]);
 
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('nursing_home_name')
-        .eq('id', session.user.id)
-        .single();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim()) return;
 
-      setProfile(profileData);
-    };
+    const userMessage: Message = { role: 'user', content: input };
+    setMessages((prev) => [...prev, userMessage]);
+    setInput('');
+    setLoading(true);
 
-    fetchProfile();
-  }, [supabase, router]);
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: input }),
+      });
+
+      const data = await res.json();
+
+      const assistantMessage: Message = { role: 'assistant', content: data.reply };
+      setMessages((prev) => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error('Error fetching chat:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <main className="p-4">
-      <h1 className="text-2xl font-bold mb-2">Chat</h1>
-      {profile && (
-        <p className="text-sm text-gray-600 mb-4">
-          Nursing Home: {profile.nursing_home_name}
-        </p>
-      )}
-      <div className="space-y-2 mb-4">
-        {messages.map((msg, idx) => (
-          <div key={idx} className={`p-2 rounded ${msg.role === 'user' ? 'bg-blue-100' : 'bg-gray-200'}`}>
-            <strong>{msg.role}:</strong> {msg.content}
+    <div className="flex flex-col h-screen bg-gray-100">
+      <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        {messages.map((msg, i) => (
+          <div
+            key={i}
+            className={`p-3 rounded-md max-w-xl ${
+              msg.role === 'user' ? 'bg-blue-500 text-white self-end' : 'bg-white text-black self-start'
+            }`}
+          >
+            {msg.content}
           </div>
         ))}
+        <div ref={messagesEndRef} />
       </div>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          setMessages([...messages, { role: 'user', content: input }]);
-          setInput('');
-        }}
-      >
+
+      <form onSubmit={handleSubmit} className="p-4 bg-white border-t flex gap-2">
         <input
-          type="text"
-          className="border p-2 rounded w-full mb-2"
+          className="flex-1 p-2 border rounded"
+          placeholder="Type your message..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message..."
+          disabled={loading}
         />
-        <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">
+        <button
+          type="submit"
+          className="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50"
+          disabled={loading}
+        >
           Send
         </button>
       </form>
-    </main>
+    </div>
   );
 }
