@@ -1,22 +1,29 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import { useAuth } from '@/components/AuthProvider';
+import { useEffect, useState } from 'react';
+import { useSupabase } from '@/components/AuthProvider';
 
 export default function RequireAuth({ children }: { children: React.ReactNode }) {
-  const { session } = useAuth();
   const router = useRouter();
+  const supabase = useSupabase();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!session) {
-      router.push(`/login?callbackUrl=${window.location.pathname}`);
-    }
-  }, [session, router]);
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
 
-  if (!session) {
-    return null; // or show a loading spinner
-  }
+      if (!session) {
+        router.push('/login');
+      } else {
+        setLoading(false);
+      }
+    };
+
+    checkSession();
+  }, [supabase, router]);
+
+  if (loading) return null;
 
   return <>{children}</>;
 }
