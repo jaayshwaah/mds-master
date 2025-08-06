@@ -4,6 +4,8 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSupabase } from '@/components/AuthProvider';
 
+export const dynamic = 'force-dynamic'; // ✅ disables prerendering
+
 export default function HomePage() {
   const supabase = useSupabase();
   const router = useRouter();
