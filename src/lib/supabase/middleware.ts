@@ -1,28 +1,34 @@
 import { createServerClient } from '@supabase/ssr';
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
+import { type Database } from '@/types/supabase';
 
-export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request });
+export async function middleware(request: NextRequest) {
+  const response = NextResponse.next();
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  const supabase = createServerClient<Database>(
+    request,
+    response,
     {
       cookies: {
-        get: (name) => request.cookies.get(name)?.value,
-        set: (name, value, options) => {
-          supabaseResponse.cookies.set(name, value, options);
+        get(name) {
+          return request.cookies.get(name)?.value;
         },
-        remove: (name) => {
-          supabaseResponse.cookies.delete(name); // ✅ FIXED: remove options param
+        set(name, value, options) {
+          response.cookies.set(name, value, options);
+        },
+        remove(name, options) {
+          response.cookies.delete(name, options);
         },
       },
     }
   );
 
-  // Refresh session if expired
-  await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  return supabaseResponse;
+  // Optional: redirect unauthenticated users
+  // if (!user) {
+  //   return NextResponse.redirect(new URL('/login', request.url));
+  // }
+
+  return response;
 }
