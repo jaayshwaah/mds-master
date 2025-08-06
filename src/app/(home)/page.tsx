@@ -1,28 +1,29 @@
 'use client';
 
-import { useSupabase } from '@/components/AuthProvider';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSupabase } from '@/components/AuthProvider';
 
 export default function HomePage() {
-  const { session } = useSupabase();
+  const supabase = useSupabase();
   const router = useRouter();
 
   useEffect(() => {
-    if (session) {
-      router.push('/dashboard');
-    }
-  }, [session, router]);
+    const getSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session) {
+        router.push('/login');
+      }
+    };
+
+    getSession();
+  }, [supabase, router]);
 
   return (
-    <div className="flex items-center justify-center h-screen bg-gray-100">
-      <div className="p-8 bg-white rounded-lg shadow-md">
-        <h1 className="text-3xl font-bold mb-4">MDS Master</h1>
-        <p className="mb-4">AI assistant for MDS coordinators in nursing homes.</p>
-        <a href="/login" className="p-2 bg-blue-600 text-white rounded">
-          Login
-        </a>
-      </div>
-    </div>
+    <main className="flex flex-col items-center justify-center h-screen p-4 text-center">
+      <h1 className="text-4xl font-bold mb-4">Welcome to MDS Master</h1>
+      <p className="text-lg text-gray-600">You're logged in and ready to go.</p>
+    </main>
   );
 }
