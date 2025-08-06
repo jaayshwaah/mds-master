@@ -9,7 +9,11 @@ export async function middleware(req: NextRequest) {
 
   const supabase = createMiddlewareClient<Database>({ req, res });
 
-  await supabase.auth.getSession(); // refresh the session if needed
+  await supabase.auth.getUser();
 
   return res;
 }
+
+export const config = {
+  matcher: ['/dashboard', '/chat', '/api/secure'],
+};

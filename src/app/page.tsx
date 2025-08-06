@@ -1,24 +1,31 @@
-'use client';
+// src/app/page.tsx
+import { cookies } from 'next/headers';
+import { createServerClient } from '@supabase/ssr';
+import type { Database } from '@/types/supabase';
 
-import { useSession } from '@/components/AuthProvider';
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+export default async function HomePage() {
+  const cookieStore = await cookies(); // <- await here
 
-export default function HomePage() {
-  const session = useSession();
-  const router = useRouter();
+  const supabase = createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+      },
+    }
+  );
 
-  useEffect(() => {
-    if (session) router.push('/dashboard');
-  }, [session, router]);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   return (
-    <div className="flex items-center justify-center h-screen bg-gray-100">
-      <div className="p-8 bg-white rounded-lg shadow-md">
-        <h1 className="text-3xl font-bold mb-4">MDS Master</h1>
-        <p className="mb-4">AI assistant for MDS coordinators in nursing homes.</p>
-        <a href="/login" className="p-2 bg-blue-600 text-white rounded">Login</a>
-      </div>
-    </div>
+    <main className="p-6">
+      <h1 className="text-2xl font-bold">Welcome {user?.email || 'Guest'}!</h1>
+      <p>This is your homepage.</p>
+    </main>
   );
 }

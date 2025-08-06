@@ -1,8 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
   experimental: {
-    serverActions: true,
+    serverActions: {}, // ✅ This must be an object, not a boolean
   },
 };
 

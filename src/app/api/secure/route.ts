@@ -1,10 +1,10 @@
 // src/app/api/secure/route.ts
 
-import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { createServerClientInstance } from '@/lib/supabase/server';
 
 export async function GET() {
-  const supabase = await createClient();
+  const supabase = await createServerClientInstance();
 
   const {
     data: { user },
@@ -12,8 +12,8 @@ export async function GET() {
   } = await supabase.auth.getUser();
 
   if (error || !user) {
-    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  return NextResponse.json({ message: 'Authorized', user });
+  return NextResponse.json({ message: `Welcome, ${user.email}` });
 }
