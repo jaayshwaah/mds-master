@@ -1,17 +1,28 @@
+// src/components/UserInfo.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useSupabase } from '@/components/AuthProvider';
+import { useEffect, useState } from "react";
+import { useSupabase } from "@/components/AuthProvider";
+
+type UserData = {
+  email: string;
+  nursing_home_name: string;
+  // Add more fields from the 'profiles' table if needed
+};
 
 export default function UserInfo() {
-  const [userData, setUserData] = useState<any>(null);
+  const [userData, setUserData] = useState<UserData | null>(null);
   const supabase = useSupabase();
 
   useEffect(() => {
     const fetchUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+        const { data } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
         setUserData(data);
       }
     };
