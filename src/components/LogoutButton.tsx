@@ -1,12 +1,11 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
-import { useAuth } from './AuthProvider';
+import { useSupabase } from './AuthProvider';
 
 export default function LogoutButton({ onLogout }: { onLogout?: () => void }) {
   const router = useRouter();
-  const { session } = useAuth();
+  const supabase = useSupabase();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -14,14 +13,12 @@ export default function LogoutButton({ onLogout }: { onLogout?: () => void }) {
     router.push('/login');
   };
 
-  if (!session) return null;
-
   return (
     <button
       onClick={handleLogout}
-      className="text-sm text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded"
+      className="text-sm text-red-500 hover:underline"
     >
-      Log out
+      Log Out
     </button>
   );
 }
