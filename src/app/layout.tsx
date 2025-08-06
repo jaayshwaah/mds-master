@@ -2,7 +2,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import { AuthProvider } from '@/components/AuthProvider';
+import AuthProvider from '@/components/AuthProvider';
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import type { Database } from '@/types/supabase';
