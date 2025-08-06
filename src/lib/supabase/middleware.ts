@@ -1,34 +1,13 @@
-import { createServerClient } from '@supabase/ssr';
+import { createMiddlewareClient } from '@supabase/ssr';
 import { type NextRequest, NextResponse } from 'next/server';
 import { type Database } from '@/types/supabase';
 
-export async function middleware(request: NextRequest) {
+export async function updateSession(request: NextRequest) {
   const response = NextResponse.next();
 
-  const supabase = createServerClient<Database>(
-    request,
-    response,
-    {
-      cookies: {
-        get(name) {
-          return request.cookies.get(name)?.value;
-        },
-        set(name, value, options) {
-          response.cookies.set(name, value, options);
-        },
-        remove(name, options) {
-          response.cookies.delete(name, options);
-        },
-      },
-    }
-  );
+  const supabase = createMiddlewareClient<Database>({ req: request, res: response });
 
-  const { data: { user } } = await supabase.auth.getUser();
-
-  // Optional: redirect unauthenticated users
-  // if (!user) {
-  //   return NextResponse.redirect(new URL('/login', request.url));
-  // }
+  await supabase.auth.getSession(); // Sync the session cookies
 
   return response;
 }

@@ -1,8 +1,9 @@
-import { NextResponse } from 'next/server';
 import { createServerClientInstance } from '@/lib/supabase/server';
+import { NextResponse } from 'next/server';
 
-export async function GET() {
-  const supabase = createServerClientInstance();
+export async function GET(request: Request) {
+  const supabase = await createServerClientInstance();
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -11,5 +12,5 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  return NextResponse.json({ message: 'Secure content', user });
+  return NextResponse.json({ message: 'Authorized', user });
 }
