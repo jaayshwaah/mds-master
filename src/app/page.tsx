@@ -1,22 +1,24 @@
 'use client';
 
+import { useSession } from '@/components/AuthProvider';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/components/AuthProvider';
 
 export default function HomePage() {
-  const { session } = useAuth();
+  const session = useSession();
   const router = useRouter();
 
   useEffect(() => {
-    if (session) {
-      router.replace('/dashboard');
-    }
-  }, [session]);
+    if (session) router.push('/dashboard');
+  }, [session, router]);
 
   return (
-    <div className="p-6">
-      <h1 className="text-xl font-semibold">Redirecting...</h1>
+    <div className="flex items-center justify-center h-screen bg-gray-100">
+      <div className="p-8 bg-white rounded-lg shadow-md">
+        <h1 className="text-3xl font-bold mb-4">MDS Master</h1>
+        <p className="mb-4">AI assistant for MDS coordinators in nursing homes.</p>
+        <a href="/login" className="p-2 bg-blue-600 text-white rounded">Login</a>
+      </div>
     </div>
   );
 }

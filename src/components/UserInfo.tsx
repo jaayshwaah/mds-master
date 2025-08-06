@@ -1,28 +1,29 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useAuth } from '@/components/AuthProvider';
-import { useRouter, usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useSupabase } from '@/components/AuthProvider';
 
 export default function UserInfo() {
-  const { session, user } = useAuth();
-  const router = useRouter();
-  const pathname = usePathname();
+  const [userData, setUserData] = useState<any>(null);
+  const supabase = useSupabase();
 
   useEffect(() => {
-    if (!session) {
-      router.push(`/login?callbackUrl=${pathname}`);
-    }
-  }, [session, pathname, router]);
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+        setUserData(data);
+      }
+    };
+    fetchUser();
+  }, [supabase]);
 
-  if (!session) {
-    return null; // Avoid showing flicker while redirecting
-  }
+  if (!userData) return <div>Loading user info...</div>;
 
   return (
-    <div className="p-4 border rounded bg-gray-100">
-      <h2 className="text-lg font-semibold">Logged in as:</h2>
-      <p>{user?.email}</p>
+    <div className="p-4 bg-gray-200 rounded">
+      <p>Email: {userData.email}</p>
+      <p>Nursing Home: {userData.nursing_home_name}</p>
     </div>
   );
 }

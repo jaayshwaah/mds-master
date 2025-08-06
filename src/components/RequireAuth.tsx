@@ -1,22 +1,18 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { useAuth } from './AuthProvider';
+import { useRouter } from 'next/navigation';
+import { useSession } from '@/components/AuthProvider';
 
 export default function RequireAuth({ children }: { children: React.ReactNode }) {
-  const { session } = useAuth();
+  const session = useSession();
   const router = useRouter();
 
   useEffect(() => {
-    if (session === null) {
-      router.push('/login?callbackUrl=' + encodeURIComponent(window.location.pathname));
-    }
+    if (!session) router.push('/auth');
   }, [session, router]);
 
-  if (!session) {
-    return null;
-  }
+  if (!session) return <div>Loading...</div>;
 
   return <>{children}</>;
 }
