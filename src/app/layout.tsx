@@ -1,7 +1,9 @@
 // src/app/layout.tsx
+'use client';
 
 import './globals.css';
 import { Inter } from 'next/font/google';
+import { useState } from 'react';
 import { AuthProvider } from '@/components/AuthProvider';
 import Sidebar from '@/components/Sidebar';
 
@@ -11,8 +13,6 @@ export const metadata = {
   title: 'MDS Master',
   description: 'AI assistant for MDS Coordinators',
 };
-
-import { useState } from 'react';
 
 export default function RootLayout({
   children,
