@@ -8,62 +8,65 @@ import { Menu } from 'lucide-react';
 
 export default function Sidebar() {
   const supabase = useSupabase();
-  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [profile, setProfile] = useState<{ nursing_home_name: string | null; role: string | null } | null>(null);
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUserEmail(user?.email ?? null);
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setLoggedIn(!!session);
+
+      if (session) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('nursing_home_name, role')
+          .eq('id', session.user.id)
+          .single();
+
+        if (data) {
+          setProfile(data);
+        }
+      }
     };
 
-    getUser();
-
-    const { data: listener } = supabase.auth.onAuthStateChange(() => {
-      getUser(); // re-check user on login/logout
-    });
-
-    return () => {
-      listener.subscription.unsubscribe();
-    };
+    checkSession();
   }, [supabase]);
 
   return (
-    <aside
-      className={`h-screen flex flex-col justify-between border-r bg-gray-100 text-sm transition-all duration-300 ${
-        collapsed ? 'w-16' : 'w-64'
-      }`}
-    >
-      {/* Top section */}
-      <div className="p-4">
-        <button
-          className="mb-4 text-gray-600 hover:text-black"
-          onClick={() => setCollapsed(!collapsed)}
-        >
-          <Menu size={20} />
+    <aside className={`flex flex-col h-screen border-r bg-gray-100 transition-all duration-300 ${collapsed ? 'w-16' : 'w-64'}`}>
+      <div className="flex items-center justify-between p-4">
+        {!collapsed && <h2 className="text-xl font-bold">MDS Master</h2>}
+        <button onClick={() => setCollapsed(!collapsed)} aria-label="Toggle sidebar">
+          <Menu />
         </button>
-        {!collapsed && (
-          <h2 className="text-xl font-bold">MDS Chat</h2>
-        )}
       </div>
 
-      {/* Bottom section */}
-      <div className="p-4 border-t text-gray-600">
-        {userEmail ? (
-          !collapsed && (
-            <div className="flex flex-col gap-1">
-              <span className="text-xs text-gray-500">Signed in as:</span>
-              <span className="text-sm truncate">{userEmail}</span>
-              <LogoutButton />
-            </div>
-          )
-        ) : (
-          !collapsed && (
-            <Link href="/login" className="text-blue-600 hover:underline">
-              Log in
-            </Link>
-          )
+      {!collapsed && (
+        <nav className="flex-1 px-4">
+          <ul className="space-y-2">
+            <li>
+              <Link href="/chat" className="text-blue-600 hover:underline">
+                Chat
+              </Link>
+            </li>
+            <li>
+              <Link href="/dashboard" className="text-blue-600 hover:underline">
+                Dashboard
+              </Link>
+            </li>
+          </ul>
+        </nav>
+      )}
+
+      <div className="mt-auto p-4 border-t">
+        {!collapsed && loggedIn && profile && (
+          <div className="mb-2 text-sm text-gray-700">
+            <div className="font-medium">{profile.nursing_home_name}</div>
+            <div className="text-xs text-gray-500">{profile.role}</div>
+          </div>
         )}
+        {!collapsed && (loggedIn ? <LogoutButton /> : <Link href="/login" className="text-blue-600 hover:underline">Login</Link>)}
       </div>
     </aside>
   );
