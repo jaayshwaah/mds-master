@@ -3,6 +3,8 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import type { Database } from '@/types/supabase';
 
+export const runtime = 'nodejs';
+
 export async function POST(req: Request) {
   const supabase = createRouteHandlerClient<Database>({ cookies });
 
