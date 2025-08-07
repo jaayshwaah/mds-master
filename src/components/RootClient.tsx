@@ -1,9 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { AuthProvider } from '@/components/AuthProvider';
-import Sidebar from '@/components/Sidebar';
-
+import AuthProvider from '@/components/AuthProvider';import Sidebar from '@/components/Sidebar';
 export default function ProvidersWrapper({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
 
