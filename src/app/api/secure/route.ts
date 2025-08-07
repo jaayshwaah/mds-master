@@ -3,6 +3,8 @@
 import { NextResponse } from 'next/server';
 import { createServerClientInstance } from '@/lib/supabase/server';
 
+export const runtime = 'nodejs';
+
 export async function GET() {
   const supabase = await createServerClientInstance();
 
