@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/browser'; // Adjust path if needed
 import { Session, SupabaseClient } from '@supabase/supabase-js';
 
@@ -12,7 +12,7 @@ type SupabaseContext = {
 const Context = createContext<SupabaseContext | undefined>(undefined);
 
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
