@@ -3,7 +3,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Sidebar from './Sidebar';
+import Sidebar from '@/components/Sidebar';
 import { usePathname } from 'next/navigation';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
