@@ -13,41 +13,39 @@ export default function Sidebar() {
 
   useEffect(() => {
     const checkSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      const { data: { session } } = await supabase.auth.getSession();
       setLoggedIn(!!session);
     };
-
     checkSession();
   }, [supabase]);
 
   return (
     <aside
-      className={`${
+      className={`flex flex-col justify-between h-screen bg-gray-100 border-r transition-all duration-300 ${
         collapsed ? 'w-16' : 'w-64'
-      } h-screen bg-gray-100 border-r p-4 transition-all duration-300 flex flex-col justify-between`}
+      }`}
     >
-      <div>
+      <div className="p-4">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">{collapsed ? 'M' : 'Menu'}</h2>
-          <button onClick={() => setCollapsed(!collapsed)} aria-label="Toggle sidebar">
-            <Menu />
+          <h2 className="text-xl font-bold">
+            {collapsed ? '🤖' : 'MDS Bot'}
+          </h2>
+          <button onClick={() => setCollapsed(!collapsed)} aria-label="Toggle Sidebar">
+            <Menu size={20} />
           </button>
         </div>
 
-        {/* Example nav links */}
         <nav className="space-y-2">
-          <Link href="/" className="block text-gray-700 hover:underline">
+          <Link href="/" className="block text-gray-800 hover:underline">
             {collapsed ? '🏠' : 'Home'}
           </Link>
-          <Link href="/chat" className="block text-gray-700 hover:underline">
+          <Link href="/chat" className="block text-gray-800 hover:underline">
             {collapsed ? '💬' : 'Chat'}
           </Link>
         </nav>
       </div>
 
-      <div className="mt-auto pt-4 border-t">
+      <div className="p-4 border-t">
         {loggedIn ? (
           <LogoutButton />
         ) : (
