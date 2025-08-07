@@ -5,12 +5,14 @@ import type { Database } from '@/types/supabase';
 
 export async function POST(req: Request) {
   const supabase = createRouteHandlerClient<Database>({ cookies });
+
   const {
     data: { user },
     error: userError,
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
+    console.error('[AUTH ERROR]', userError);
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -28,13 +30,14 @@ export async function POST(req: Request) {
   });
 
   if (insertUserError) {
+    console.error('[DB ERROR] Failed to save user message:', insertUserError);
     return NextResponse.json({ error: 'Failed to save user message' }, { status: 500 });
   }
 
-  // Simulated AI response (replace this later with real logic)
+  // Simulated AI response (replace later with OpenAI/n8n integration)
   const aiResponse = `You said: "${message}". I'm your AI assistant!`;
 
-  // Save AI response
+  // Save assistant message
   const { error: insertAiError } = await supabase.from('messages').insert({
     user_id: user.id,
     content: aiResponse,
@@ -42,6 +45,7 @@ export async function POST(req: Request) {
   });
 
   if (insertAiError) {
+    console.error('[DB ERROR] Failed to save AI response:', insertAiError);
     return NextResponse.json({ error: 'Failed to save AI response' }, { status: 500 });
   }
 

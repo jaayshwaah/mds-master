@@ -1,16 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 export default function Chat() {
   const [input, setInput] = useState('');
   const [reply, setReply] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const sendMessage = async () => {
     if (!input.trim()) return;
 
     setLoading(true);
@@ -20,9 +19,7 @@ export default function Chat() {
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: input }),
       });
 
@@ -32,23 +29,40 @@ export default function Chat() {
         setError(data.error || 'Something went wrong.');
       } else {
         setReply(data.reply);
+        setInput('');
+        textareaRef.current?.focus();
       }
-    } catch (err) {
+    } catch {
       setError('Network error.');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
   return (
     <div className="max-w-xl mx-auto p-4">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          sendMessage();
+        }}
+        className="flex flex-col gap-4"
+      >
         <textarea
+          ref={textareaRef}
           className="w-full p-3 border rounded-md text-sm resize-none"
           rows={4}
           placeholder="Ask me something..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
           disabled={loading}
         />
 
